@@ -4232,73 +4232,41 @@
     const updateBtn=document.getElementById('qq-css-update-btn');
     const importBtn=document.getElementById('qq-css-import-btn');
     const fileInput=document.getElementById('qq-css-import-file');
-    if(!cssInput||!presetSelect||!newBtn||!updateBtn||!importBtn||!fileInput)return;
-
-    // 新建只清空编辑区，不触碰数据库中的任何预设。
-    newBtn.addEventListener('click',function(){
-      cssInput.value='';
-      cssInput.dispatchEvent(new Event('input',{bubbles:true}));
-      cssInput.focus();
-    });
-
-    // 直接覆盖下拉框当前选中的已保存 CSS 预设。
-    updateBtn.addEventListener('click',async function(){
-      const id=Number.parseInt(presetSelect.value,10);
-      if(!Number.isFinite(id)){alert('请先在“CSS 预设”中选择要更新的已保存预设。');return;}
-      try{
-        const db=window._0x24f906 || (typeof _0x24f906!=='undefined'?_0x24f906:null);
-        if(!db||!db.appearancePresets){alert('预设数据库尚未就绪，请稍后重试。');return;}
-        const preset=await db.appearancePresets.get(id);
-        if(!preset||preset.type!=='global_css'){alert('未找到当前选中的 CSS 预设，请重新选择。');return;}
-        await db.appearancePresets.update(id,{value:cssInput.value});
-        if(typeof _0x184e6d==='function')await _0x184e6d();
-        presetSelect.value=String(id);
-        alert('当前 CSS 预设已更新。');
-      }catch(err){console.error('更新 CSS 预设失败',err);alert('更新失败，请检查数据库状态后重试。');}
-    });
-
-    importBtn.addEventListener('click',function(){fileInput.value='';fileInput.click();});
-    fileInput.addEventListener('change',async function(){
-      const file=fileInput.files&&fileInput.files[0];if(!file)return;
-      try{
-        let code='';
-        if(/\.docx$/i.test(file.name)){
-          if(!window.mammoth)throw new Error('DOCX 解析组件未加载');
-          const result=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
-          code=result.value||'';
-        }else{code=await file.text();}
-        if(!code.trim()){alert('文件中没有读取到代码内容。');return;}
-        // 仅导入到当前编辑框，不自动覆盖或保存任何预设。
-        cssInput.value=code;
-        cssInput.dispatchEvent(new Event('input',{bubbles:true}));
-        cssInput.focus();
-        alert('代码已导入输入框，请检查后点击“更新当前预设”或原有“保存”按钮保存。');
-      }catch(err){console.error('导入 CSS 代码失败',err);alert('导入失败：无法读取该文件，请确认是有效的 TXT、CSS 或 DOCX 文件。');}
-    });
-
-    // 聊天页面连续点击 7 次触发确认；仅清除当前聊天的 customCss，不改动预设库。
+    if(cssInput&&presetSelect&&newBtn&&updateBtn&&importBtn&&fileInput&&!newBtn.dataset.qqBound){
+      newBtn.dataset.qqBound='1';
+      newBtn.addEventListener('click',function(){cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));cssInput.focus();});
+      updateBtn.addEventListener('click',async function(){
+        const id=parseInt(presetSelect.value,10);if(!Number.isFinite(id)){alert('请先选择要更新的已保存 CSS 预设。');return;}
+        try{const db=(typeof _0x24f906!=='undefined')?_0x24f906:null;if(!db||!db.appearancePresets)throw new Error('预设数据库尚未就绪');const preset=await db.appearancePresets.get(id);if(!preset||preset.type!=='global_css'){alert('未找到当前选中的 CSS 预设。');return;}await db.appearancePresets.update(id,{value:cssInput.value});if(typeof _0x184e6d==='function')await _0x184e6d();alert('当前 CSS 预设已更新。');}
+        catch(e){console.error(e);alert('更新失败：预设数据库尚未就绪或保存失败。');}
+      });
+      importBtn.addEventListener('click',function(){fileInput.value='';fileInput.click();});
+      fileInput.addEventListener('change',async function(){const file=fileInput.files&&fileInput.files[0];if(!file)return;try{let code='';if(/\.docx$/i.test(file.name)){if(!window.mammoth)throw new Error('DOCX 解析组件未加载');code=(await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()})).value||'';}else code=await file.text();if(!code.trim()){alert('文件中没有读取到代码内容。');return;}cssInput.value=code;cssInput.dispatchEvent(new Event('input',{bubbles:true}));cssInput.focus();alert('代码已导入输入框，请检查后保存。');}catch(e){console.error(e);alert('导入失败：无法读取文件，请确认是有效的 TXT、CSS 或 DOCX 文件。');}});
+    }
     const chatScreen=document.getElementById('chat-interface-screen');
     if(chatScreen&&!chatScreen.dataset.qqCssTapGuard){
-      chatScreen.dataset.qqCssTapGuard='1';
-      let taps=0,lastTap=0;
+      chatScreen.dataset.qqCssTapGuard='1';let taps=0,lastTap=0;
       chatScreen.addEventListener('click',async function(ev){
         if(ev.target.closest('button,a,input,textarea,select,[role="button"],.modal,.modal-content'))return;
-        const now=Date.now();if(now-lastTap>1800)taps=0;lastTap=now;taps++;
-        if(taps<=6)return;taps=0;
-        if(!confirm('检测到连续点击屏幕超过 6 次。是否清除当前聊天的 CSS？\n只清除当前聊天的 CSS，不会删除或修改已保存的 CSS 预设。'))return;
+        const now=Date.now();if(now-lastTap>1800)taps=0;lastTap=now;if(++taps<=6)return;taps=0;
+        if(!window.confirm('检测到连续点击屏幕超过 6 次。是否清除当前聊天的 CSS？\n仅清除当前聊天的 CSS，不会影响已保存预设。'))return;
         try{
-          const state=typeof _0x5ea3c1!=='undefined'?_0x5ea3c1:null;
-          const db=typeof _0x24f906!=='undefined'?_0x24f906:null;
-          if(!state||!state.chats||!state.activeChatId){alert('无法识别当前聊天，请重新进入聊天页面后重试。');return;}
-          const chat=state.chats[state.activeChatId];if(!chat){alert('未找到当前聊天。');return;}
+          const state=(typeof _0x5ea3c1!=='undefined')?_0x5ea3c1:null;
+          const db=(typeof _0x24f906!=='undefined')?_0x24f906:null;
+          if(!state||!state.activeChatId||!state.chats)throw new Error('当前聊天状态不可用');
+          const chat=state.chats[state.activeChatId];if(!chat)throw new Error('未找到当前聊天');
           if(!chat.settings)chat.settings={};
           chat.settings.customCss='';
-          if(db&&db.chats&&chat.id!=null)await db.chats.update(chat.id,{settings:chat.settings});
-          cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));
+          // Persist the complete chat record using the same IndexedDB table as the app.
+          if(!db||!db.chats||typeof db.chats.put!=='function')throw new Error('聊天数据库不可用');
+          await db.chats.put(chat);
+          // Update the active chat's live style and settings preview immediately.
+          if(typeof _0x5a0c81==='function')_0x5a0c81('','#chat-interface-screen','custom-bubble-style');
           const style=document.getElementById('custom-bubble-style');if(style)style.textContent='';
-          // 使用现有的聊天设置保存流程同步其他内部状态（不涉及预设表）。
-          alert('当前聊天的 CSS 已清除；已保存预设保持不变。');
-        }catch(err){console.error('清除当前聊天 CSS 失败',err);alert('清除失败，请进入聊天设置手动重置当前聊天 CSS。');}
+          if(cssInput){cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));}
+          const preview=document.getElementById('settings-preview-area');if(preview&&typeof _0xeff358==='function')await _0xeff358();
+          alert('当前聊天的 CSS 已清除，已保存的 CSS 预设未修改。');
+        }catch(e){console.error('清除当前聊天 CSS 失败',e);alert('清除失败：'+(e&&e.message?e.message:'请重试'));}
       });
     }
   }
