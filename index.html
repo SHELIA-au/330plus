@@ -1050,7 +1050,9 @@
             <button class="settings-full-btn" id="check-and-fix-data-btn">数据检查与修复</button>
             <button class="settings-full-btn" id="emergency-reset-appearance-btn" >重置当前外观</button>
             <button class="settings-full-btn" id="factory-reset-btn" > 初始化所有内容 (慎用)</button>
-
+<button class="settings-full-btn" id="logout-btn" >
+    退出登录 (切换账号)
+</button>
         </div>
         <!-- 新增：关于与免责声明区域 -->
         <div class="settings-header">关于</div>
@@ -2429,6 +2431,12 @@
             <div class="settings-item-block">
                  <label>自定义 CSS <button id="reset-custom-css-btn" style="float:right; font-size:12px;">重置</button></label>
                  <textarea id="custom-css-input" rows="3" class="settings-textarea" placeholder="/* 针对当前聊天的CSS */"></textarea>
+                 <div id="qq-css-preset-extra-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                    <button type="button" id="qq-css-new-btn" class="settings-mini-btn">新建</button>
+                    <button type="button" id="qq-css-update-btn" class="settings-mini-btn">更新当前预设</button>
+                    <button type="button" id="qq-css-import-btn" class="settings-mini-btn">导入</button>
+                    <input type="file" id="qq-css-import-file" accept=".txt,.text,.docx,.css" style="display:none;">
+                 </div>
             </div>
 
             <div class="settings-item-block">
@@ -3872,7 +3880,30 @@
     <div class="modal-footer"> <button class="save" id="close-npc-group-manager-btn" style="width: 100%;"data-lang-key="done">完成</button> </div>
   </div>
 </div>
-
+<div id="pin-modal-overlay" class="modal">
+    <div id="pin-modal-content" class="modal-content" style="width: 300px; height: auto;">
+        <div class="modal-header">
+            <span>功能激活</span>
+        </div>
+        <div class="modal-body" style="text-align: left;">
+            <p>此功能需要激活码 (PIN) 才能使用。</p>
+            
+            <div class="form-group">
+                <label for="pin-device-id-display">您的设备ID (请去尾巴镇角色卡中获取，还有解密没直接给网址，按照要求去搜索就好了，以下数字即为你的设备码)</label>
+                <input type="text" id="pin-device-id-display" readonly style="background: #eee; cursor: text; -webkit-user-select: text; user-select: text;">
+            </div>
+            
+            <div class="form-group">
+                <label for="pin-input">请输入激活码 (PIN)</label>
+                <input type="text" id="pin-input" placeholder="在此输入激活码...">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel" id="pin-modal-cancel-btn">取消</button>
+            <button class="save" id="pin-modal-confirm-btn">确认激活</button>
+        </div>
+    </div>
+</div>
 <div id="quick-reply-modal" class="modal">
     <div class="modal-content" style="height: 70%; position: relative;"> <div class="modal-header">
             <span>快捷回复</span>
@@ -4176,51 +4207,89 @@
 
 
 
-<script>
-(function () {
+<script id="qq-css-preset-enhancements">
+(function(){
   'use strict';
-  function installChatCssEmergencyReset() {
-    const chatPage = document.getElementById('chat-interface-screen');
-    if (!chatPage || chatPage.dataset.cssEmergencyResetInstalled === '1') return;
-    chatPage.dataset.cssEmergencyResetInstalled = '1';
-    let taps = 0;
-    let firstTapAt = 0;
-    let resetLock = false;
-    chatPage.addEventListener('click', function (event) {
-      if (resetLock) return;
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (target.closest('button, a, input, textarea, select, label, [role="button"], .header-actions, .back-btn, #chat-settings-btn')) {
-        taps = 0; firstTapAt = 0; return;
-      }
-      const now = Date.now();
-      if (!firstTapAt || now - firstTapAt > 2500) { taps = 0; firstTapAt = now; }
-      taps++;
-      if (taps < 6) return;
-      taps = 0; firstTapAt = 0;
-      resetLock = true;
-      const accepted = window.confirm('检测到连续点击。是否清除当前聊天的自定义 CSS？\n只清除当前聊天 CSS，不会删除全局 CSS 或已保存预设。');
-      if (accepted) {
-        const resetButton = document.getElementById('reset-custom-css-btn');
-        const cssInput = document.getElementById('custom-css-input');
-        const saveButton = document.getElementById('save-chat-settings-btn');
-        if (cssInput) cssInput.value = '';
-        if (resetButton) resetButton.click();
-        if (cssInput) {
-          cssInput.value = '';
-          cssInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        if (saveButton) saveButton.click();
-        else window.alert('CSS 输入框已清空，但未找到保存按钮。请打开聊天设置点击“完成”保存。');
-      }
-      setTimeout(function () { resetLock = false; }, 800);
-    }, true);
+  function initQQCssEnhancements(){
+    const cssInput=document.getElementById('custom-css-input');
+    const presetSelect=document.getElementById('css-preset-select');
+    const newBtn=document.getElementById('qq-css-new-btn');
+    const updateBtn=document.getElementById('qq-css-update-btn');
+    const importBtn=document.getElementById('qq-css-import-btn');
+    const fileInput=document.getElementById('qq-css-import-file');
+    if(!cssInput||!presetSelect||!newBtn||!updateBtn||!importBtn||!fileInput)return;
+
+    // 新建只清空编辑区，不触碰数据库中的任何预设。
+    newBtn.addEventListener('click',function(){
+      cssInput.value='';
+      cssInput.dispatchEvent(new Event('input',{bubbles:true}));
+      cssInput.focus();
+    });
+
+    // 直接覆盖下拉框当前选中的已保存 CSS 预设。
+    updateBtn.addEventListener('click',async function(){
+      const id=Number.parseInt(presetSelect.value,10);
+      if(!Number.isFinite(id)){alert('请先在“CSS 预设”中选择要更新的已保存预设。');return;}
+      try{
+        const db=window._0x24f906 || (typeof _0x24f906!=='undefined'?_0x24f906:null);
+        if(!db||!db.appearancePresets){alert('预设数据库尚未就绪，请稍后重试。');return;}
+        const preset=await db.appearancePresets.get(id);
+        if(!preset||preset.type!=='global_css'){alert('未找到当前选中的 CSS 预设，请重新选择。');return;}
+        await db.appearancePresets.update(id,{value:cssInput.value});
+        if(typeof _0x184e6d==='function')await _0x184e6d();
+        presetSelect.value=String(id);
+        alert('当前 CSS 预设已更新。');
+      }catch(err){console.error('更新 CSS 预设失败',err);alert('更新失败，请检查数据库状态后重试。');}
+    });
+
+    importBtn.addEventListener('click',function(){fileInput.value='';fileInput.click();});
+    fileInput.addEventListener('change',async function(){
+      const file=fileInput.files&&fileInput.files[0];if(!file)return;
+      try{
+        let code='';
+        if(/\.docx$/i.test(file.name)){
+          if(!window.mammoth)throw new Error('DOCX 解析组件未加载');
+          const result=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
+          code=result.value||'';
+        }else{code=await file.text();}
+        if(!code.trim()){alert('文件中没有读取到代码内容。');return;}
+        // 仅导入到当前编辑框，不自动覆盖或保存任何预设。
+        cssInput.value=code;
+        cssInput.dispatchEvent(new Event('input',{bubbles:true}));
+        cssInput.focus();
+        alert('代码已导入输入框，请检查后点击“更新当前预设”或原有“保存”按钮保存。');
+      }catch(err){console.error('导入 CSS 代码失败',err);alert('导入失败：无法读取该文件，请确认是有效的 TXT、CSS 或 DOCX 文件。');}
+    });
+
+    // 聊天页面连续点击 7 次触发确认；仅清除当前聊天的 customCss，不改动预设库。
+    const chatScreen=document.getElementById('chat-interface-screen');
+    if(chatScreen&&!chatScreen.dataset.qqCssTapGuard){
+      chatScreen.dataset.qqCssTapGuard='1';
+      let taps=0,lastTap=0;
+      chatScreen.addEventListener('click',async function(ev){
+        if(ev.target.closest('button,a,input,textarea,select,[role="button"],.modal,.modal-content'))return;
+        const now=Date.now();if(now-lastTap>1800)taps=0;lastTap=now;taps++;
+        if(taps<=6)return;taps=0;
+        if(!confirm('检测到连续点击屏幕超过 6 次。是否清除当前聊天的 CSS？\n只清除当前聊天的 CSS，不会删除或修改已保存的 CSS 预设。'))return;
+        try{
+          const state=typeof _0x5ea3c1!=='undefined'?_0x5ea3c1:null;
+          const db=typeof _0x24f906!=='undefined'?_0x24f906:null;
+          if(!state||!state.chats||!state.activeChatId){alert('无法识别当前聊天，请重新进入聊天页面后重试。');return;}
+          const chat=state.chats[state.activeChatId];if(!chat){alert('未找到当前聊天。');return;}
+          if(!chat.settings)chat.settings={};
+          chat.settings.customCss='';
+          if(db&&db.chats&&chat.id!=null)await db.chats.update(chat.id,{settings:chat.settings});
+          cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));
+          const style=document.getElementById('custom-bubble-style');if(style)style.textContent='';
+          // 使用现有的聊天设置保存流程同步其他内部状态（不涉及预设表）。
+          alert('当前聊天的 CSS 已清除；已保存预设保持不变。');
+        }catch(err){console.error('清除当前聊天 CSS 失败',err);alert('清除失败，请进入聊天设置手动重置当前聊天 CSS。');}
+      });
+    }
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installChatCssEmergencyReset, { once: true });
-  else installChatCssEmergencyReset();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initQQCssEnhancements,{once:true});else initQQCssEnhancements();
 })();
 </script>
-
 </body>
 </html>
 

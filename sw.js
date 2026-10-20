@@ -2,7 +2,7 @@
 
 // 缓存版本号
 const CACHE_VERSION = 'v1.7.29'; // 版本号+1
-const CACHE_NAME = `ephone-cache-${CACHE_VERSION}-safe-v12`;
+const CACHE_NAME = `ephone-cache-${CACHE_VERSION}`;
 
 const URLS_TO_CACHE = [
   './index.html',
