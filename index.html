@@ -4256,19 +4256,20 @@
           if(!state||!state.activeChatId||!state.chats)throw new Error('当前聊天状态不可用');
           const chat=state.chats[state.activeChatId];if(!chat)throw new Error('未找到当前聊天');
           if(!chat.settings)chat.settings={};
-          // 清除的是当前单聊的自定义气泡 CSS，让消息恢复应用默认样式；不碰全局 CSS 预设表。
+          // 只清除当前聊天自己的 customCss 字段；不触碰 appearancePresets 中保存的预设。
+          const chatId=state.activeChatId;
+          chat.settings=chat.settings||{};
           chat.settings.customCss='';
           if(!db||!db.chats||typeof db.chats.put!=='function')throw new Error('聊天数据库不可用');
           await db.chats.put(chat);
-          // 先清空当前生效的样式节点，再调用应用原本的 CSS 应用函数刷新为默认外观。
+          // 关键：调用原应用打开/渲染聊天的函数，让当前聊天重新按已保存的默认设置渲染。
+          if(typeof _0x7baf0e==='function') await _0x7baf0e(chatId);
+          // 再明确清空自定义样式节点，防止旧 CSS 残留在当前页面。
+          if(typeof _0x5a0c81==='function')_0x5a0c81('', '#chat-interface-screen', 'custom-bubble-style');
           const style=document.getElementById('custom-bubble-style');
           if(style)style.textContent='';
-          if(typeof _0x5a0c81==='function')_0x5a0c81('', '#chat-interface-screen', 'custom-bubble-style');
           if(cssInput){cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));}
-          // 如果聊天设置页有预览，更新预览；然后刷新当前聊天消息的呈现。
-          if(typeof _0x260ace==='function')_0x260ace(chat);
-          if(typeof _0x275208==='function')_0x275208('chat-interface-screen');
-          alert('当前单聊的自定义 CSS 已清除，回复已恢复默认样式；已保存的 CSS 预设未修改。');
+          alert('当前单聊已恢复默认回复样式；已保存的 CSS 预设未修改。');
         }catch(e){console.error('清除当前聊天 CSS 失败',e);alert('清除失败：'+(e&&e.message?e.message:'请重试'));}
       });
     }
