@@ -4243,18 +4243,27 @@
       importBtn.addEventListener('click',function(){fileInput.value='';fileInput.click();});
       fileInput.addEventListener('change',async function(){const file=fileInput.files&&fileInput.files[0];if(!file)return;try{let code='';if(/\.docx$/i.test(file.name)){if(!window.mammoth)throw new Error('DOCX 解析组件未加载');code=(await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()})).value||'';}else code=await file.text();if(!code.trim()){alert('文件中没有读取到代码内容。');return;}cssInput.value=code;cssInput.dispatchEvent(new Event('input',{bubbles:true}));cssInput.focus();alert('代码已导入输入框，请检查后保存。');}catch(e){console.error(e);alert('导入失败：无法读取文件，请确认是有效的 TXT、CSS 或 DOCX 文件。');}});
     }
-    const chatScreen=document.getElementById('chat-interface-screen');
-    if(chatScreen&&!chatScreen.dataset.qqCssTapGuard){
-      chatScreen.dataset.qqCssTapGuard='1';
+    // 使用 document 捕获阶段监听，避免聊天气泡/内部组件 stopPropagation 导致点击计数失效。
+    if(!document.documentElement.dataset.qqCssTapGuardBound){
+      document.documentElement.dataset.qqCssTapGuardBound='1';
       let taps=0,lastTap=0,resetting=false;
-      chatScreen.addEventListener('click',async function(ev){
-        if(resetting||ev.defaultPrevented||ev.target.closest('button,a,input,textarea,select,[role="button"],.modal,.modal-content,[contenteditable="true"]'))return;
+      document.addEventListener('click',async function(ev){
+        const chatScreen=document.getElementById('chat-interface-screen');
+        if(!chatScreen||!chatScreen.contains(ev.target))return;
+        const rect=chatScreen.getBoundingClientRect();
+        const style=window.getComputedStyle(chatScreen);
+        if(style.display==='none'||style.visibility==='hidden'||rect.width===0||rect.height===0){taps=0;lastTap=0;return;}
+        // 不把输入、设置按钮、弹窗操作算作“连续点击聊天屏幕”。
+        if(ev.target.closest('input,textarea,select,[contenteditable="true"],.modal,.modal-content,[role="dialog"]'))return;
+        if(ev.target.closest('button,a,[role="button"]'))return;
         const now=Date.now();
         if(now-lastTap>1800)taps=0;
         lastTap=now;
-        if(++taps<7)return;
+        taps++;
+        if(taps<7)return;
         taps=0;lastTap=0;
-        const confirmed=window.confirm('检测到连续点击聊天屏幕超过 6 次。确定后将当前单聊恢复默认主题和回复样式；不会删除聊天记录，也不会修改已保存的 CSS 预设。');
+        if(resetting)return;
+        const confirmed=window.confirm('检测到连续点击单聊屏幕超过 6 次。确定后将当前单聊恢复默认主题和回复样式；不会删除聊天记录，也不会修改已保存的 CSS 预设。');
         if(!confirmed)return;
         resetting=true;
         try{
@@ -4262,25 +4271,27 @@
           const db=(typeof _0x24f906!=='undefined')?_0x24f906:null;
           const chatId=state&&state.activeChatId;
           const chat=state&&state.chats&&chatId?state.chats[chatId]:null;
-          if(!chat||chat.isGroup)throw new Error('请在单人聊天页面中操作，当前聊天状态不可用或属于群聊。');
+          if(!chat)throw new Error('当前聊天状态不可用，请确认已进入单人聊天。');
+          if(chat.isGroup)throw new Error('此功能仅用于单人聊天，请先进入单人聊天。');
           if(!chat.settings||typeof chat.settings!=='object')chat.settings={};
           chat.settings.customCss='';
           chat.settings.theme='default';
-          if(!db||!db.chats||typeof db.chats.put!=='function')throw new Error('聊天数据库不可用，未能保存更改');
+          if(!db||!db.chats||typeof db.chats.put!=='function')throw new Error('聊天数据库不可用，未能保存更改。');
           await db.chats.put(chat);
-          // 重新打开当前聊天以重新应用默认主题；再移除旧页面残留的自定义样式。
           if(typeof _0x7baf0e==='function')await _0x7baf0e(chatId);
           if(typeof _0x5a0c81==='function')_0x5a0c81('', '#chat-interface-screen', 'custom-bubble-style');
-          const style=document.getElementById('custom-bubble-style');
-          if(style)style.textContent='';
+          const customStyle=document.getElementById('custom-bubble-style');
+          if(customStyle)customStyle.textContent='';
           const root=document.getElementById('chat-interface-screen');
           if(root)root.style.removeProperty('--chat-theme');
+          const cssInput=document.getElementById('custom-css-input');
+          if(cssInput){cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));}
           alert('当前单聊已恢复默认主题和回复样式。聊天记录及已保存的 CSS 预设均未修改。');
         }catch(e){
           console.error('恢复单聊默认主题失败',e);
           alert('恢复失败：'+(e&&e.message?e.message:'请重试'));
         }finally{resetting=false;}
-      });
+      },true);
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initQQCssEnhancements,{once:true});else initQQCssEnhancements();
