@@ -4305,39 +4305,27 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initQQCssEnhancements,{once:true});else initQQCssEnhancements();
 })();
 </script>
-<script id="desktop-size-and-login-bypass">
+<script id="desktop-size-settings">
 (function(){
+  'use strict';
   const ICON_KEY='ephone_desktop_icon_scale_v1', WIDGET_KEY='ephone_desktop_widget_scale_v1';
   function applyScale(){
-    const icon=Number(localStorage.getItem(ICON_KEY)||100), widget=Number(localStorage.getItem(WIDGET_KEY)||100);
-    document.documentElement.style.setProperty('--desktop-icon-scale', String(icon/100));
-    document.documentElement.style.setProperty('--desktop-widget-scale', String(widget/100));
-    const ir=document.getElementById('desktop-icon-size'), wr=document.getElementById('desktop-widget-size');
-    const iv=document.getElementById('desktop-icon-size-value'), wv=document.getElementById('desktop-widget-size-value');
+    let icon=Number(localStorage.getItem(ICON_KEY)||100), widget=Number(localStorage.getItem(WIDGET_KEY)||100);
+    if(!Number.isFinite(icon))icon=100;if(!Number.isFinite(widget))widget=100;
+    document.documentElement.style.setProperty('--desktop-icon-scale',String(icon/100));
+    document.documentElement.style.setProperty('--desktop-widget-scale',String(widget/100));
+    const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
+    const iv=document.getElementById('desktop-icon-size-value'),wv=document.getElementById('desktop-widget-size-value');
     if(ir){ir.value=String(icon);if(iv)iv.textContent=icon+'%';}
     if(wr){wr.value=String(widget);if(wv)wv.textContent=widget+'%';}
   }
   function bind(){
-    const ir=document.getElementById('desktop-icon-size'), wr=document.getElementById('desktop-widget-size');
-    if(ir&&!ir.dataset.bound){ir.dataset.bound='1';ir.addEventListener('input',()=>{localStorage.setItem(ICON_KEY,ir.value);applyScale();});}
-    if(wr&&!wr.dataset.bound){wr.dataset.bound='1';wr.addEventListener('input',()=>{localStorage.setItem(WIDGET_KEY,wr.value);applyScale();});}
+    const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
+    if(ir&&!ir.dataset.bound){ir.dataset.bound='1';ir.addEventListener('input',function(){localStorage.setItem(ICON_KEY,ir.value);applyScale();});}
+    if(wr&&!wr.dataset.bound){wr.dataset.bound='1';wr.addEventListener('input',function(){localStorage.setItem(WIDGET_KEY,wr.value);applyScale();});}
     applyScale();
   }
-  function bypassLogin(){
-    const uid=document.getElementById('login-uid');
-    if(!uid)return;
-    let node=uid;
-    while(node.parentElement && node.parentElement!==document.body && node.parentElement.id!=='phone-screen') node=node.parentElement;
-    if(node && node!==document.body && node.id!=='home-screen') node.remove();
-    const home=document.getElementById('home-screen');
-    if(home){document.querySelectorAll('#phone-screen > .screen, #phone-screen .screen').forEach(el=>{if(el!==home && el.id!=='lock-screen')el.classList.remove('active');});home.classList.add('active');home.style.display='';}
-    const lock=document.getElementById('lock-screen'); if(lock) lock.classList.remove('active');
-  }
-  function init(){bind();bypassLogin();}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-  const observer=new MutationObserver(()=>{bind();bypassLogin();});
-  observer.observe(document.documentElement,{childList:true,subtree:true});
-  window.addEventListener('pageshow',init);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
 </script>
 </body>
