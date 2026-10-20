@@ -17880,3 +17880,14 @@ body.frame-mode-active .cphone-dock-container {
     background-color: rgba(255, 255, 255, 0.15) !important; /* 深色下的半透明白 */
     color: #8d8d92 !important; /* 浅灰字 */
 }
+/* 新增：桌面图标和小组件独立缩放，范围由外观设置控制 */
+#home-screen .desktop-app-icon .icon-bg-desktop { transform: scale(var(--desktop-icon-scale, 1)); transform-origin: center center; }
+#home-screen .small-widget-icon-wrapper { transform: scale(var(--desktop-icon-scale, 1)); transform-origin: center center; }
+#home-screen .desktop-widget,
+#home-screen .large-widget,
+#home-screen .polaroid-widget-container,
+#home-screen .vinyl-transparent-widget,
+#home-screen .cphone-circle-widget-wrapper { transform: scale(var(--desktop-widget-scale, 1)); transform-origin: top left; }
+.desktop-size-settings label { display:flex; justify-content:space-between; align-items:center; gap:12px; font-weight:600; margin-bottom:10px; }
+.desktop-size-settings label span { font-variant-numeric:tabular-nums; opacity:.75; }
+.desktop-size-range { width:100%; display:block; accent-color:var(--accent-color, #777); margin:8px 0; }

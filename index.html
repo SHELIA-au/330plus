@@ -1754,6 +1754,21 @@
             </div>
         </div>
 
+        <!-- 桌面尺寸调节：新增设置，不改变原有图标定制逻辑 -->
+        <div class="settings-header">桌面尺寸调节</div>
+        <div class="settings-section desktop-size-settings">
+          <div class="settings-item-block">
+            <label for="desktop-icon-size">桌面图标大小 <span id="desktop-icon-size-value">100%</span></label>
+            <input id="desktop-icon-size" type="range" min="70" max="140" step="5" value="100" class="desktop-size-range">
+            <div class="settings-desc">调节桌面应用图标，不影响聊天页面内的图标。</div>
+          </div>
+          <div class="settings-item-block" style="border-top:0.5px solid #c6c6c8;">
+            <label for="desktop-widget-size">桌面小组件大小 <span id="desktop-widget-size-value">100%</span></label>
+            <input id="desktop-widget-size" type="range" min="70" max="140" step="5" value="100" class="desktop-size-range">
+            <div class="settings-desc">调节桌面文字、图片等小组件的显示大小。</div>
+          </div>
+        </div>
+
         <!-- 6. 工具栏排序 -->
         <div class="settings-header">聊天工具栏</div>
         <div class="settings-section">
@@ -4288,6 +4303,41 @@
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initQQCssEnhancements,{once:true});else initQQCssEnhancements();
+})();
+</script>
+<script id="desktop-size-and-login-bypass">
+(function(){
+  const ICON_KEY='ephone_desktop_icon_scale_v1', WIDGET_KEY='ephone_desktop_widget_scale_v1';
+  function applyScale(){
+    const icon=Number(localStorage.getItem(ICON_KEY)||100), widget=Number(localStorage.getItem(WIDGET_KEY)||100);
+    document.documentElement.style.setProperty('--desktop-icon-scale', String(icon/100));
+    document.documentElement.style.setProperty('--desktop-widget-scale', String(widget/100));
+    const ir=document.getElementById('desktop-icon-size'), wr=document.getElementById('desktop-widget-size');
+    const iv=document.getElementById('desktop-icon-size-value'), wv=document.getElementById('desktop-widget-size-value');
+    if(ir){ir.value=String(icon);if(iv)iv.textContent=icon+'%';}
+    if(wr){wr.value=String(widget);if(wv)wv.textContent=widget+'%';}
+  }
+  function bind(){
+    const ir=document.getElementById('desktop-icon-size'), wr=document.getElementById('desktop-widget-size');
+    if(ir&&!ir.dataset.bound){ir.dataset.bound='1';ir.addEventListener('input',()=>{localStorage.setItem(ICON_KEY,ir.value);applyScale();});}
+    if(wr&&!wr.dataset.bound){wr.dataset.bound='1';wr.addEventListener('input',()=>{localStorage.setItem(WIDGET_KEY,wr.value);applyScale();});}
+    applyScale();
+  }
+  function bypassLogin(){
+    const uid=document.getElementById('login-uid');
+    if(!uid)return;
+    let node=uid;
+    while(node.parentElement && node.parentElement!==document.body && node.parentElement.id!=='phone-screen') node=node.parentElement;
+    if(node && node!==document.body && node.id!=='home-screen') node.remove();
+    const home=document.getElementById('home-screen');
+    if(home){document.querySelectorAll('#phone-screen > .screen, #phone-screen .screen').forEach(el=>{if(el!==home && el.id!=='lock-screen')el.classList.remove('active');});home.classList.add('active');home.style.display='';}
+    const lock=document.getElementById('lock-screen'); if(lock) lock.classList.remove('active');
+  }
+  function init(){bind();bypassLogin();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  const observer=new MutationObserver(()=>{bind();bypassLogin();});
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+  window.addEventListener('pageshow',init);
 })();
 </script>
 </body>
