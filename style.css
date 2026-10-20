@@ -17880,9 +17880,9 @@ body.frame-mode-active .cphone-dock-container {
     background-color: rgba(255, 255, 255, 0.15) !important; /* 深色下的半透明白 */
     color: #8d8d92 !important; /* 浅灰字 */
 }
-/* 桌面尺寸调节：缩放完整的图标/组件元素，确保控件不只是显示百分比 */
-#home-screen .desktop-app-icon { zoom: var(--desktop-icon-scale, 1) !important; }
-#home-screen .small-widget { zoom: var(--desktop-icon-scale, 1) !important; }
+/* 桌面尺寸调节：以原始 55px 为基准，直接控制图标与小组件图标的实际像素尺寸 */
+#home-screen .icon-bg-desktop { width: var(--desktop-icon-size, 55px) !important; height: var(--desktop-icon-size, 55px) !important; }
+#home-screen .small-widget-icon-wrapper { width: var(--desktop-widget-size, 55px) !important; height: var(--desktop-widget-size, 55px) !important; }
 #home-screen .desktop-widget,
 #home-screen .large-widget,
 #home-screen .polaroid-widget-container,

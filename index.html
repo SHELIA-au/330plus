@@ -1758,14 +1758,14 @@
         <div class="settings-header">桌面尺寸调节</div>
         <div class="settings-section desktop-size-settings">
           <div class="settings-item-block">
-            <label for="desktop-icon-size">桌面图标大小 <span id="desktop-icon-size-value">100%</span></label>
-            <input id="desktop-icon-size" type="range" min="70" max="140" step="5" value="100" class="desktop-size-range">
-            <div class="settings-desc">调节桌面应用图标，不影响聊天页面内的图标。</div>
+            <label for="desktop-icon-size">桌面图标大小 <span id="desktop-icon-size-value">55px</span></label>
+            <input id="desktop-icon-size" type="range" min="30" max="85" step="1" value="55" class="desktop-size-range">
+            <div class="settings-desc">以原始 55px 为初始大小，向左缩小、向右放大。</div>
           </div>
           <div class="settings-item-block" style="border-top:0.5px solid #c6c6c8;">
-            <label for="desktop-widget-size">桌面小组件大小 <span id="desktop-widget-size-value">100%</span></label>
-            <input id="desktop-widget-size" type="range" min="70" max="140" step="5" value="100" class="desktop-size-range">
-            <div class="settings-desc">调节桌面文字、图片等小组件的显示大小。</div>
+            <label for="desktop-widget-size">桌面小组件大小 <span id="desktop-widget-size-value">55px</span></label>
+            <input id="desktop-widget-size" type="range" min="30" max="85" step="1" value="55" class="desktop-size-range">
+            <div class="settings-desc">以原始 55px 为初始大小，向左缩小、向右放大。</div>
           </div>
         </div>
 
@@ -4256,16 +4256,19 @@
           if(!state||!state.activeChatId||!state.chats)throw new Error('当前聊天状态不可用');
           const chat=state.chats[state.activeChatId];if(!chat)throw new Error('未找到当前聊天');
           if(!chat.settings)chat.settings={};
+          // 清除的是当前单聊的自定义气泡 CSS，让消息恢复应用默认样式；不碰全局 CSS 预设表。
           chat.settings.customCss='';
-          // Persist the complete chat record using the same IndexedDB table as the app.
           if(!db||!db.chats||typeof db.chats.put!=='function')throw new Error('聊天数据库不可用');
           await db.chats.put(chat);
-          // Update the active chat's live style and settings preview immediately.
-          if(typeof _0x5a0c81==='function')_0x5a0c81('','#chat-interface-screen','custom-bubble-style');
-          const style=document.getElementById('custom-bubble-style');if(style)style.textContent='';
+          // 先清空当前生效的样式节点，再调用应用原本的 CSS 应用函数刷新为默认外观。
+          const style=document.getElementById('custom-bubble-style');
+          if(style)style.textContent='';
+          if(typeof _0x5a0c81==='function')_0x5a0c81('', '#chat-interface-screen', 'custom-bubble-style');
           if(cssInput){cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));}
-          const preview=document.getElementById('settings-preview-area');if(preview&&typeof _0xeff358==='function')await _0xeff358();
-          alert('当前聊天的 CSS 已清除，已保存的 CSS 预设未修改。');
+          // 如果聊天设置页有预览，更新预览；然后刷新当前聊天消息的呈现。
+          if(typeof _0x260ace==='function')_0x260ace(chat);
+          if(typeof _0x275208==='function')_0x275208('chat-interface-screen');
+          alert('当前单聊的自定义 CSS 已清除，回复已恢复默认样式；已保存的 CSS 预设未修改。');
         }catch(e){console.error('清除当前聊天 CSS 失败',e);alert('清除失败：'+(e&&e.message?e.message:'请重试'));}
       });
     }
@@ -4276,22 +4279,26 @@
 <script id="desktop-size-settings">
 (function(){
   'use strict';
-  const ICON_KEY='ephone_desktop_icon_scale_v1', WIDGET_KEY='ephone_desktop_widget_scale_v1';
-  function applyScale(){
-    let icon=Number(localStorage.getItem(ICON_KEY)||100), widget=Number(localStorage.getItem(WIDGET_KEY)||100);
-    if(!Number.isFinite(icon))icon=100;if(!Number.isFinite(widget))widget=100;
-    document.documentElement.style.setProperty('--desktop-icon-scale',String(icon/100));
-    document.documentElement.style.setProperty('--desktop-widget-scale',String(widget/100));
+  // 55px 是原始桌面图标/小组件图标尺寸；滑块直接控制像素，而不是百分比缩放。
+  const ICON_KEY='ephone_desktop_icon_px_v2', WIDGET_KEY='ephone_desktop_widget_px_v2';
+  const BASE=55;
+  function clampPx(value){const n=Number(value);return Number.isFinite(n)?Math.max(30,Math.min(85,n)):BASE;}
+  function applySize(){
+    const icon=clampPx(localStorage.getItem(ICON_KEY) || BASE);
+    const widget=clampPx(localStorage.getItem(WIDGET_KEY) || BASE);
+    document.documentElement.style.setProperty('--desktop-icon-size',icon+'px');
+    document.documentElement.style.setProperty('--desktop-widget-size',widget+'px');
+    document.documentElement.style.setProperty('--desktop-widget-scale',String(widget/BASE));
     const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
     const iv=document.getElementById('desktop-icon-size-value'),wv=document.getElementById('desktop-widget-size-value');
-    if(ir){ir.value=String(icon);if(iv)iv.textContent=icon+'%';}
-    if(wr){wr.value=String(widget);if(wv)wv.textContent=widget+'%';}
+    if(ir){ir.value=String(icon);if(iv)iv.textContent=icon+'px';}
+    if(wr){wr.value=String(widget);if(wv)wv.textContent=widget+'px';}
   }
   function bind(){
     const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
-    if(ir&&!ir.dataset.bound){ir.dataset.bound='1';ir.addEventListener('input',function(){localStorage.setItem(ICON_KEY,ir.value);applyScale();});}
-    if(wr&&!wr.dataset.bound){wr.dataset.bound='1';wr.addEventListener('input',function(){localStorage.setItem(WIDGET_KEY,wr.value);applyScale();});}
-    applyScale();
+    if(ir&&!ir.dataset.bound){ir.dataset.bound='1';ir.addEventListener('input',function(){localStorage.setItem(ICON_KEY,String(clampPx(ir.value)));applySize();});}
+    if(wr&&!wr.dataset.bound){wr.dataset.bound='1';wr.addEventListener('input',function(){localStorage.setItem(WIDGET_KEY,String(clampPx(wr.value)));applySize();});}
+    applySize();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
