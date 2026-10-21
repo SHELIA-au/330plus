@@ -49,38 +49,45 @@ function _0x14a8(_0x1eedc3,_0x368bc8){const _0x161ae7=_0x161a();return _0x14a8=f
   function initDesktopSizing(){
     const iconSlider=document.getElementById('desktop-icon-size-slider');
     const widgetSlider=document.getElementById('desktop-widget-size-slider');
-    if(!iconSlider||!widgetSlider||iconSlider.dataset.ready)return;
-    iconSlider.dataset.ready='1';
-    const applyIcon=v=>{
-      const n=Math.max(36,Math.min(88,Number(v)||55));
-      document.querySelectorAll('#home-screen .icon-bg-desktop').forEach(el=>{el.style.width=n+'px';el.style.height=n+'px';});
-      document.getElementById('desktop-icon-size-value').textContent=n+'px';
-      localStorage.setItem('ephone_desktop_icon_size',String(n));
-    };
-    const applyWidget=v=>{
-      const n=Math.max(36,Math.min(110,Number(v)||55));
-      document.querySelectorAll('#home-screen .small-widget-icon-wrapper').forEach(el=>{el.style.width=n+'px';el.style.height=n+'px';});
-      document.getElementById('desktop-widget-size-value').textContent=n+'px';
-      localStorage.setItem('ephone_desktop_widget_size',String(n));
-    };
-    iconSlider.value=localStorage.getItem('ephone_desktop_icon_size')||'55';
-    widgetSlider.value=localStorage.getItem('ephone_desktop_widget_size')||'55';
-    iconSlider.addEventListener('input',e=>applyIcon(e.target.value));
-    widgetSlider.addEventListener('input',e=>applyWidget(e.target.value));
-    applyIcon(iconSlider.value);applyWidget(widgetSlider.value);
+    const iconValue=document.getElementById('desktop-icon-size-value');
+    const widgetValue=document.getElementById('desktop-widget-size-value');
+    // Initialize each slider independently: one missing control must not disable the other.
+    if(iconSlider&&!iconSlider.dataset.ready){
+      iconSlider.dataset.ready='1';
+      const applyIcon=v=>{
+        const n=Math.max(36,Math.min(88,Number(v)||55));
+        document.querySelectorAll('#home-screen .icon-bg-desktop').forEach(el=>{
+          el.style.setProperty('width',n+'px','important');
+          el.style.setProperty('height',n+'px','important');
+          el.style.setProperty('flex-shrink','0');
+        });
+        if(iconValue)iconValue.textContent=n+'px';
+        localStorage.setItem('ephone_desktop_icon_size',String(n));
+      };
+      iconSlider.value=localStorage.getItem('ephone_desktop_icon_size')||iconSlider.value||'55';
+      iconSlider.addEventListener('input',e=>applyIcon(e.target.value));
+      iconSlider.addEventListener('change',e=>applyIcon(e.target.value));
+      applyIcon(iconSlider.value);
+    }
+    if(widgetSlider&&!widgetSlider.dataset.ready){
+      widgetSlider.dataset.ready='1';
+      const applyWidget=v=>{
+        const n=Math.max(36,Math.min(110,Number(v)||55));
+        document.querySelectorAll('#home-screen .small-widget-icon-wrapper').forEach(el=>{
+          el.style.setProperty('width',n+'px','important');
+          el.style.setProperty('height',n+'px','important');
+          el.style.setProperty('flex-shrink','0');
+        });
+        if(widgetValue)widgetValue.textContent=n+'px';
+        localStorage.setItem('ephone_desktop_widget_size',String(n));
+      };
+      widgetSlider.value=localStorage.getItem('ephone_desktop_widget_size')||widgetSlider.value||'55';
+      widgetSlider.addEventListener('input',e=>applyWidget(e.target.value));
+      widgetSlider.addEventListener('change',e=>applyWidget(e.target.value));
+      applyWidget(widgetSlider.value);
+    }
   }
   function init(){initChatCssTools();initDesktopSizing();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
   document.addEventListener('click',()=>setTimeout(init,100),true);
-  let taps=[];
-  document.addEventListener('click',function(e){
-    const chatScreen=document.querySelector('#chat-interface-screen');
-    if(!chatScreen||!chatScreen.contains(e.target))return;
-    const now=Date.now();taps=taps.filter(t=>now-t<1800);taps.push(now);
-    if(taps.length>6){taps=[];if(confirm('检测到连续点击屏幕超过6次，是否清除当前聊天的CSS？')){
-      const input=document.getElementById('custom-css-input');
-      if(input){input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));}
-      try{if(typeof currentChat!=='undefined'&&currentChat&&currentChat.settings)currentChat.settings.customCss='';if(typeof activeChat!=='undefined'&&activeChat&&activeChat.settings)activeChat.settings.customCss='';const save=document.getElementById('save-chat-settings-btn');if(save)save.click();}catch(_){}
-    }}
-  },true);
 })();
