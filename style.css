@@ -17880,14 +17880,3 @@ body.frame-mode-active .cphone-dock-container {
     background-color: rgba(255, 255, 255, 0.15) !important; /* 深色下的半透明白 */
     color: #8d8d92 !important; /* 浅灰字 */
 }
-/* 桌面尺寸调节：以原始 55px 为基准，直接控制图标与小组件图标的实际像素尺寸 */
-#home-screen .icon-bg-desktop { width: var(--desktop-icon-size, 55px) !important; height: var(--desktop-icon-size, 55px) !important; }
-#home-screen .small-widget-icon-wrapper { width: var(--desktop-widget-size, 55px) !important; height: var(--desktop-widget-size, 55px) !important; }
-#home-screen .desktop-widget,
-#home-screen .large-widget,
-#home-screen .polaroid-widget-container,
-#home-screen .vinyl-transparent-widget,
-#home-screen .cphone-circle-widget-wrapper { zoom: var(--desktop-widget-scale, 1) !important; }
-.desktop-size-settings label { display:flex; justify-content:space-between; align-items:center; gap:12px; font-weight:600; margin-bottom:10px; }
-.desktop-size-settings label span { font-variant-numeric:tabular-nums; opacity:.75; }
-.desktop-size-range { width:100%; display:block; accent-color:var(--accent-color, #777); margin:8px 0; }
