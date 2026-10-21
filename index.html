@@ -1754,21 +1754,6 @@
             </div>
         </div>
 
-        <!-- 桌面尺寸调节：新增设置，不改变原有图标定制逻辑 -->
-        <div class="settings-header">桌面尺寸调节</div>
-        <div class="settings-section desktop-size-settings">
-          <div class="settings-item-block">
-            <label for="desktop-icon-size">桌面图标大小 <span id="desktop-icon-size-value">55px</span></label>
-            <input id="desktop-icon-size" type="range" min="30" max="85" step="1" value="55" class="desktop-size-range">
-            <div class="settings-desc">以原始 55px 为初始大小，向左缩小、向右放大。</div>
-          </div>
-          <div class="settings-item-block" style="border-top:0.5px solid #c6c6c8;">
-            <label for="desktop-widget-size">桌面小组件大小 <span id="desktop-widget-size-value">55px</span></label>
-            <input id="desktop-widget-size" type="range" min="30" max="85" step="1" value="55" class="desktop-size-range">
-            <div class="settings-desc">以原始 55px 为初始大小，向左缩小、向右放大。</div>
-          </div>
-        </div>
-
         <!-- 6. 工具栏排序 -->
         <div class="settings-header">聊天工具栏</div>
         <div class="settings-section">
@@ -2446,12 +2431,6 @@
             <div class="settings-item-block">
                  <label>自定义 CSS <button id="reset-custom-css-btn" style="float:right; font-size:12px;">重置</button></label>
                  <textarea id="custom-css-input" rows="3" class="settings-textarea" placeholder="/* 针对当前聊天的CSS */"></textarea>
-                 <div id="qq-css-preset-extra-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-                    <button type="button" id="qq-css-new-btn" class="settings-mini-btn">新建</button>
-                    <button type="button" id="qq-css-update-btn" class="settings-mini-btn">更新当前预设</button>
-                    <button type="button" id="qq-css-import-btn" class="settings-mini-btn">导入</button>
-                    <input type="file" id="qq-css-import-file" accept=".txt,.text,.docx,.css" style="display:none;">
-                 </div>
             </div>
 
             <div class="settings-item-block">
@@ -3223,7 +3202,7 @@
   </div>
   <div id="chat-list-actions-modal" class="modal">
     <div id="custom-modal" style="width: 250px;">
-      <div class="custom-modal-footer"> <button id="chat-list-action-pin"></button> <button id="chat-list-action-delete" class="btn-danger">删除聊天</button> <button id="chat-list-action-cancel" style="margin-top: 8px; border-radius: 8px; background-color: #f0f0f0;"data-lang-key="cancel">取消</button> </div>
+      <div class="custom-modal-footer"> <button id="chat-list-action-pin"></button> <button id="chat-list-action-reset-css">清除聊天样式</button> <button id="chat-list-action-delete" class="btn-danger">删除聊天</button> <button id="chat-list-action-cancel" style="margin-top: 8px; border-radius: 8px; background-color: #f0f0f0;"data-lang-key="cancel">取消</button> </div>
     </div>
   </div>
   <div id="share-link-modal" class="modal">
@@ -4221,60 +4200,6 @@
 
 
 
-
-<script id="qq-css-preset-enhancements">
-(function(){
-  'use strict';
-  function initQQCssEnhancements(){
-    const cssInput=document.getElementById('custom-css-input');
-    const presetSelect=document.getElementById('css-preset-select');
-    const newBtn=document.getElementById('qq-css-new-btn');
-    const updateBtn=document.getElementById('qq-css-update-btn');
-    const importBtn=document.getElementById('qq-css-import-btn');
-    const fileInput=document.getElementById('qq-css-import-file');
-    if(cssInput&&presetSelect&&newBtn&&updateBtn&&importBtn&&fileInput&&!newBtn.dataset.qqBound){
-      newBtn.dataset.qqBound='1';
-      newBtn.addEventListener('click',function(){cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));cssInput.focus();});
-      updateBtn.addEventListener('click',async function(){
-        const id=parseInt(presetSelect.value,10);if(!Number.isFinite(id)){alert('请先选择要更新的已保存 CSS 预设。');return;}
-        try{const db=(typeof _0x24f906!=='undefined')?_0x24f906:null;if(!db||!db.appearancePresets)throw new Error('预设数据库尚未就绪');const preset=await db.appearancePresets.get(id);if(!preset||preset.type!=='global_css'){alert('未找到当前选中的 CSS 预设。');return;}await db.appearancePresets.update(id,{value:cssInput.value});if(typeof _0x184e6d==='function')await _0x184e6d();alert('当前 CSS 预设已更新。');}
-        catch(e){console.error(e);alert('更新失败：预设数据库尚未就绪或保存失败。');}
-      });
-      importBtn.addEventListener('click',function(){fileInput.value='';fileInput.click();});
-      fileInput.addEventListener('change',async function(){const file=fileInput.files&&fileInput.files[0];if(!file)return;try{let code='';if(/\.docx$/i.test(file.name)){if(!window.mammoth)throw new Error('DOCX 解析组件未加载');code=(await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()})).value||'';}else code=await file.text();if(!code.trim()){alert('文件中没有读取到代码内容。');return;}cssInput.value=code;cssInput.dispatchEvent(new Event('input',{bubbles:true}));cssInput.focus();alert('代码已导入输入框，请检查后保存。');}catch(e){console.error(e);alert('导入失败：无法读取文件，请确认是有效的 TXT、CSS 或 DOCX 文件。');}});
-    }
-
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initQQCssEnhancements,{once:true});else initQQCssEnhancements();
-})();
-</script>
-<script id="desktop-size-settings">
-(function(){
-  'use strict';
-  // 55px 是原始桌面图标/小组件图标尺寸；滑块直接控制像素，而不是百分比缩放。
-  const ICON_KEY='ephone_desktop_icon_px_v2', WIDGET_KEY='ephone_desktop_widget_px_v2';
-  const BASE=55;
-  function clampPx(value){const n=Number(value);return Number.isFinite(n)?Math.max(30,Math.min(85,n)):BASE;}
-  function applySize(){
-    const icon=clampPx(localStorage.getItem(ICON_KEY) || BASE);
-    const widget=clampPx(localStorage.getItem(WIDGET_KEY) || BASE);
-    document.documentElement.style.setProperty('--desktop-icon-size',icon+'px');
-    document.documentElement.style.setProperty('--desktop-widget-size',widget+'px');
-    document.documentElement.style.setProperty('--desktop-widget-scale',String(widget/BASE));
-    const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
-    const iv=document.getElementById('desktop-icon-size-value'),wv=document.getElementById('desktop-widget-size-value');
-    if(ir){ir.value=String(icon);if(iv)iv.textContent=icon+'px';}
-    if(wr){wr.value=String(widget);if(wv)wv.textContent=widget+'px';}
-  }
-  function bind(){
-    const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
-    if(ir&&!ir.dataset.bound){ir.dataset.bound='1';ir.addEventListener('input',function(){localStorage.setItem(ICON_KEY,String(clampPx(ir.value)));applySize();});}
-    if(wr&&!wr.dataset.bound){wr.dataset.bound='1';wr.addEventListener('input',function(){localStorage.setItem(WIDGET_KEY,String(clampPx(wr.value)));applySize();});}
-    applySize();
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-})();
-</script>
 </body>
 </html>
 
