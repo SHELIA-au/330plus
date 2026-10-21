@@ -3200,24 +3200,24 @@
       <div class="modal-footer"> <button class="save" id="close-group-avatar-library-btn" style="width: 100%;">关闭</button> </div>
     </div>
   </div>
-  <div id="chat-list-actions-modal" class="modal">
-    <div id="custom-modal" style="width: 250px;">
-      <div class="custom-modal-footer"> <button id="chat-list-action-pin"></button> <button id="chat-list-action-delete" class="btn-danger">删除聊天</button> <button id="chat-list-action-style">清除聊天样式</button> <button id="chat-list-action-cancel" style="margin-top: 8px; border-radius: 8px; background-color: #f0f0f0;"data-lang-key="cancel">取消</button> </div>
-    </div>
-  </div>
   <div id="chat-style-actions-modal" class="modal">
-    <div class="modal-content" style="width: min(340px, 90vw); height: auto; max-height: 80vh;">
+    <div class="modal-content" style="width:min(340px,90vw);height:auto;max-height:80vh;">
       <div class="modal-header"><span>聊天样式</span></div>
       <div class="modal-body">
-        <p style="margin-top:0;">选择要应用到这个聊天的气泡主题预设，或恢复默认样式。</p>
-        <label for="chat-style-preset-select">已有气泡主题预设</label>
-        <select id="chat-style-preset-select" class="settings-select" style="width:100%; margin-top:8px;"><option value="">正在读取预设…</option></select>
+        <p>选择现有气泡主题预设，或恢复此聊天的默认样式。</p>
+        <label for="chat-style-preset-select">气泡主题预设</label>
+        <select id="chat-style-preset-select" class="settings-select" style="width:100%;margin-top:8px;"><option value="">请选择预设</option></select>
       </div>
-      <div class="modal-footer" style="display:flex; flex-wrap:wrap; gap:8px;">
+      <div class="modal-footer" style="display:flex;flex-wrap:wrap;gap:8px;">
         <button class="save" id="chat-style-apply-preset-btn">应用预设</button>
         <button class="cancel" id="chat-style-reset-default-btn">恢复默认</button>
         <button class="cancel" id="chat-style-cancel-btn">取消</button>
       </div>
+    </div>
+  </div>
+  <div id="chat-list-actions-modal" class="modal">
+    <div id="custom-modal" style="width: 250px;">
+      <div class="custom-modal-footer"> <button id="chat-list-action-pin"></button> <button id="chat-list-action-delete" class="btn-danger">删除聊天</button> <button id="chat-list-action-style">清除聊天样式</button> <button id="chat-list-action-cancel" style="margin-top: 8px; border-radius: 8px; background-color: #f0f0f0;"data-lang-key="cancel">取消</button> </div>
     </div>
   </div>
   <div id="share-link-modal" class="modal">
