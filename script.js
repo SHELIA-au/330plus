@@ -56,10 +56,14 @@ function _0x14a8(_0x1eedc3,_0x368bc8){const _0x161ae7=_0x161a();return _0x14a8=f
       iconSlider.dataset.ready='1';
       const applyIcon=v=>{
         const n=Math.max(36,Math.min(88,Number(v)||55));
-        document.querySelectorAll('#home-screen .icon-bg-desktop').forEach(el=>{
+        document.querySelectorAll('.icon-bg-desktop').forEach(el=>{
           el.style.setProperty('width',n+'px','important');
           el.style.setProperty('height',n+'px','important');
-          el.style.setProperty('flex-shrink','0');
+          el.style.setProperty('min-width',n+'px','important');
+          el.style.setProperty('min-height',n+'px','important');
+          el.style.setProperty('flex','0 0 '+n+'px','important');
+          const img=el.querySelector('img');
+          if(img){img.style.setProperty('width','100%','important');img.style.setProperty('height','100%','important');}
         });
         if(iconValue)iconValue.textContent=n+'px';
         localStorage.setItem('ephone_desktop_icon_size',String(n));
@@ -73,10 +77,14 @@ function _0x14a8(_0x1eedc3,_0x368bc8){const _0x161ae7=_0x161a();return _0x14a8=f
       widgetSlider.dataset.ready='1';
       const applyWidget=v=>{
         const n=Math.max(36,Math.min(110,Number(v)||55));
-        document.querySelectorAll('#home-screen .small-widget-icon-wrapper').forEach(el=>{
+        document.querySelectorAll('.small-widget-icon-wrapper').forEach(el=>{
           el.style.setProperty('width',n+'px','important');
           el.style.setProperty('height',n+'px','important');
-          el.style.setProperty('flex-shrink','0');
+          el.style.setProperty('min-width',n+'px','important');
+          el.style.setProperty('min-height',n+'px','important');
+          el.style.setProperty('flex','0 0 '+n+'px','important');
+          const img=el.querySelector('img');
+          if(img){img.style.setProperty('width','100%','important');img.style.setProperty('height','100%','important');}
         });
         if(widgetValue)widgetValue.textContent=n+'px';
         localStorage.setItem('ephone_desktop_widget_size',String(n));
@@ -87,7 +95,11 @@ function _0x14a8(_0x1eedc3,_0x368bc8){const _0x161ae7=_0x161a();return _0x14a8=f
       applyWidget(widgetSlider.value);
     }
   }
-  function init(){initChatCssTools();initDesktopSizing();}
+  function init(){
+    // Keep each feature isolated: a CSS-import initialization error must not disable icon sizing.
+    try{initChatCssTools();}catch(e){console.error('Chat CSS tools initialization failed:',e);}
+    try{initDesktopSizing();}catch(e){console.error('Desktop icon sizing initialization failed:',e);}
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0);
   document.addEventListener('click',()=>setTimeout(init,100),true);
 })();
