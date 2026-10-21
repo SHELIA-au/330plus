@@ -1754,21 +1754,6 @@
             </div>
         </div>
 
-        <!-- 桌面尺寸调节：新增设置，不改变原有图标定制逻辑 -->
-        <div class="settings-header">桌面尺寸调节</div>
-        <div class="settings-section desktop-size-settings">
-          <div class="settings-item-block">
-            <label for="desktop-icon-size">桌面图标大小 <span id="desktop-icon-size-value">55px</span></label>
-            <input id="desktop-icon-size" type="range" min="30" max="85" step="1" value="55" class="desktop-size-range">
-            <div class="settings-desc">以原始 55px 为初始大小，向左缩小、向右放大。</div>
-          </div>
-          <div class="settings-item-block" style="border-top:0.5px solid #c6c6c8;">
-            <label for="desktop-widget-size">桌面小组件大小 <span id="desktop-widget-size-value">55px</span></label>
-            <input id="desktop-widget-size" type="range" min="30" max="85" step="1" value="55" class="desktop-size-range">
-            <div class="settings-desc">以原始 55px 为初始大小，向左缩小、向右放大。</div>
-          </div>
-        </div>
-
         <!-- 6. 工具栏排序 -->
         <div class="settings-header">聊天工具栏</div>
         <div class="settings-section">
@@ -2446,12 +2431,6 @@
             <div class="settings-item-block">
                  <label>自定义 CSS <button id="reset-custom-css-btn" style="float:right; font-size:12px;">重置</button></label>
                  <textarea id="custom-css-input" rows="3" class="settings-textarea" placeholder="/* 针对当前聊天的CSS */"></textarea>
-                 <div id="qq-css-preset-extra-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-                    <button type="button" id="qq-css-new-btn" class="settings-mini-btn">新建</button>
-                    <button type="button" id="qq-css-update-btn" class="settings-mini-btn">更新当前预设</button>
-                    <button type="button" id="qq-css-import-btn" class="settings-mini-btn">导入</button>
-                    <input type="file" id="qq-css-import-file" accept=".txt,.text,.docx,.css" style="display:none;">
-                 </div>
             </div>
 
             <div class="settings-item-block">
@@ -3223,7 +3202,22 @@
   </div>
   <div id="chat-list-actions-modal" class="modal">
     <div id="custom-modal" style="width: 250px;">
-      <div class="custom-modal-footer"> <button id="chat-list-action-pin"></button> <button id="chat-list-action-clear-style">清除聊天样式</button> <button id="chat-list-action-delete" class="btn-danger">删除聊天</button> <button id="chat-list-action-cancel" style="margin-top: 8px; border-radius: 8px; background-color: #f0f0f0;"data-lang-key="cancel">取消</button> </div>
+      <div class="custom-modal-footer"> <button id="chat-list-action-pin"></button> <button id="chat-list-action-delete" class="btn-danger">删除聊天</button> <button id="chat-list-action-style">清除聊天样式</button> <button id="chat-list-action-cancel" style="margin-top: 8px; border-radius: 8px; background-color: #f0f0f0;"data-lang-key="cancel">取消</button> </div>
+    </div>
+  </div>
+  <div id="chat-style-actions-modal" class="modal">
+    <div class="modal-content" style="width: min(340px, 90vw); height: auto; max-height: 80vh;">
+      <div class="modal-header"><span>聊天样式</span></div>
+      <div class="modal-body">
+        <p style="margin-top:0;">选择要应用到这个聊天的气泡主题预设，或恢复默认样式。</p>
+        <label for="chat-style-preset-select">已有气泡主题预设</label>
+        <select id="chat-style-preset-select" class="settings-select" style="width:100%; margin-top:8px;"><option value="">正在读取预设…</option></select>
+      </div>
+      <div class="modal-footer" style="display:flex; flex-wrap:wrap; gap:8px;">
+        <button class="save" id="chat-style-apply-preset-btn">应用预设</button>
+        <button class="cancel" id="chat-style-reset-default-btn">恢复默认</button>
+        <button class="cancel" id="chat-style-cancel-btn">取消</button>
+      </div>
     </div>
   </div>
   <div id="share-link-modal" class="modal">
@@ -4221,118 +4215,6 @@
 
 
 
-
-<script id="qq-css-preset-enhancements">
-(function(){
-  'use strict';
-  function initQQCssEnhancements(){
-    const cssInput=document.getElementById('custom-css-input');
-    const presetSelect=document.getElementById('css-preset-select');
-    const newBtn=document.getElementById('qq-css-new-btn');
-    const updateBtn=document.getElementById('qq-css-update-btn');
-    const importBtn=document.getElementById('qq-css-import-btn');
-    const fileInput=document.getElementById('qq-css-import-file');
-    if(cssInput&&presetSelect&&newBtn&&updateBtn&&importBtn&&fileInput&&!newBtn.dataset.qqBound){
-      newBtn.dataset.qqBound='1';
-      newBtn.addEventListener('click',function(){cssInput.value='';cssInput.dispatchEvent(new Event('input',{bubbles:true}));cssInput.focus();});
-      updateBtn.addEventListener('click',async function(){
-        const id=parseInt(presetSelect.value,10);if(!Number.isFinite(id)){alert('请先选择要更新的已保存 CSS 预设。');return;}
-        try{const db=(typeof _0x24f906!=='undefined')?_0x24f906:null;if(!db||!db.appearancePresets)throw new Error('预设数据库尚未就绪');const preset=await db.appearancePresets.get(id);if(!preset||preset.type!=='global_css'){alert('未找到当前选中的 CSS 预设。');return;}await db.appearancePresets.update(id,{value:cssInput.value});if(typeof _0x184e6d==='function')await _0x184e6d();alert('当前 CSS 预设已更新。');}
-        catch(e){console.error(e);alert('更新失败：预设数据库尚未就绪或保存失败。');}
-      });
-      importBtn.addEventListener('click',function(){fileInput.value='';fileInput.click();});
-      fileInput.addEventListener('change',async function(){const file=fileInput.files&&fileInput.files[0];if(!file)return;try{let code='';if(/\.docx$/i.test(file.name)){if(!window.mammoth)throw new Error('DOCX 解析组件未加载');code=(await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()})).value||'';}else code=await file.text();if(!code.trim()){alert('文件中没有读取到代码内容。');return;}cssInput.value=code;cssInput.dispatchEvent(new Event('input',{bubbles:true}));cssInput.focus();alert('代码已导入输入框，请检查后保存。');}catch(e){console.error(e);alert('导入失败：无法读取文件，请确认是有效的 TXT、CSS 或 DOCX 文件。');}});
-    }
-    // 长按聊天列表项目：直接修改项目真实使用的聊天对象，并调用原有 Dexie 保存流程。
-    if(!document.documentElement.dataset.qqCssLongPressResetBound){
-      document.documentElement.dataset.qqCssLongPressResetBound='1';
-      const list=document.getElementById('chat-list');
-      if(list){
-        let pressTimer=null, longPressTriggered=false;
-        const clearPress=()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}};
-        const getRow=(target)=>{
-          const node=target instanceof Element?target.closest('.chat-list-item[data-chat-id]'):null;
-          return node&&list.contains(node)?node:null;
-        };
-        list.addEventListener('pointerdown',function(ev){
-          if(ev.button!==undefined&&ev.button!==0)return;
-          const row=getRow(ev.target);
-          if(!row||ev.target.closest('button,a,input,textarea,select,[role="button"]'))return;
-          clearPress();longPressTriggered=false;
-          pressTimer=setTimeout(async function(){
-            pressTimer=null;longPressTriggered=true;
-            const confirmed=window.confirm('确定清除这个聊天的自定义 CSS 并恢复默认主题吗？聊天记录不会删除，其他聊天和已保存的 CSS 预设不会修改。');
-            if(!confirmed)return;
-            try{
-              const chatId=row.getAttribute('data-chat-id')||(row.dataset&&row.dataset.chatId);
-              if(!chatId)throw new Error('无法从所选聊天项目读取聊天 ID。');
-              if(typeof _0x5ea3c1==='undefined'||typeof _0x24f906==='undefined')throw new Error('应用聊天数据或数据库尚未初始化，请返回聊天列表后重试。');
-              let chat=_0x5ea3c1.chats&&_0x5ea3c1.chats[chatId];
-              if(!chat)chat=await _0x24f906.chats.get(chatId);
-              if(!chat)throw new Error('数据库中找不到这个聊天，未修改任何数据。');
-              if(!chat.settings||typeof chat.settings!=='object')chat.settings={};
-              const oldCss=chat.settings.customCss,oldTheme=chat.settings.theme;
-              chat.settings.customCss='';
-              chat.settings.theme='default';
-              try{
-                await _0x24f906.chats.put(chat);
-              }catch(saveError){
-                chat.settings.customCss=oldCss;
-                if(oldTheme===undefined)delete chat.settings.theme;else chat.settings.theme=oldTheme;
-                throw saveError;
-              }
-              if(_0x5ea3c1.chats)_0x5ea3c1.chats[chatId]=chat;
-              if(String(_0x5ea3c1.activeChatId)===String(chatId)&&typeof _0x57e676==='function')await _0x57e676(_0x5ea3c1.activeChatId);
-              if(typeof _0x4bb316==='function')_0x4bb316();
-              alert('已清除该聊天的自定义 CSS，并恢复默认主题。聊天记录和 CSS 预设未删除。');
-            }catch(e){
-              console.error('长按清除聊天 CSS 失败',e);
-              alert('清除失败：'+(e&&e.message?e.message:'请重试'));
-            }
-          },750);
-        });
-        ['pointerup','pointercancel','pointerleave'].forEach(type=>list.addEventListener(type,clearPress));
-        list.addEventListener('click',function(ev){
-          if(longPressTriggered){
-            ev.preventDefault();ev.stopPropagation();
-            if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
-            longPressTriggered=false;
-          }
-        },true);
-      }
-    }
-
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initQQCssEnhancements,{once:true});else initQQCssEnhancements();
-})();
-</script>
-<script id="desktop-size-settings">
-(function(){
-  'use strict';
-  // 55px 是原始桌面图标/小组件图标尺寸；滑块直接控制像素，而不是百分比缩放。
-  const ICON_KEY='ephone_desktop_icon_px_v2', WIDGET_KEY='ephone_desktop_widget_px_v2';
-  const BASE=55;
-  function clampPx(value){const n=Number(value);return Number.isFinite(n)?Math.max(30,Math.min(85,n)):BASE;}
-  function applySize(){
-    const icon=clampPx(localStorage.getItem(ICON_KEY) || BASE);
-    const widget=clampPx(localStorage.getItem(WIDGET_KEY) || BASE);
-    document.documentElement.style.setProperty('--desktop-icon-size',icon+'px');
-    document.documentElement.style.setProperty('--desktop-widget-size',widget+'px');
-    document.documentElement.style.setProperty('--desktop-widget-scale',String(widget/BASE));
-    const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
-    const iv=document.getElementById('desktop-icon-size-value'),wv=document.getElementById('desktop-widget-size-value');
-    if(ir){ir.value=String(icon);if(iv)iv.textContent=icon+'px';}
-    if(wr){wr.value=String(widget);if(wv)wv.textContent=widget+'px';}
-  }
-  function bind(){
-    const ir=document.getElementById('desktop-icon-size'),wr=document.getElementById('desktop-widget-size');
-    if(ir&&!ir.dataset.bound){ir.dataset.bound='1';ir.addEventListener('input',function(){localStorage.setItem(ICON_KEY,String(clampPx(ir.value)));applySize();});}
-    if(wr&&!wr.dataset.bound){wr.dataset.bound='1';wr.addEventListener('input',function(){localStorage.setItem(WIDGET_KEY,String(clampPx(wr.value)));applySize();});}
-    applySize();
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-})();
-</script>
 </body>
 </html>
 
